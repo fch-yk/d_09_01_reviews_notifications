@@ -1,5 +1,4 @@
 import contextlib
-import datetime
 import logging
 import pprint
 import time
@@ -18,8 +17,6 @@ def main():
     devman_token = env("DEVMAN_TOKEN")
     url = "https://dvmn.org/api/long_polling/"
     headers = {"Authorization": f"Token {devman_token}"}
-    # timestamp = datetime.datetime(2023, 1, 1).timestamp()
-    # timestamp = datetime.datetime.now().timestamp()
     timestamp = None
     timeout = 15
 
