@@ -1,6 +1,8 @@
+import contextlib
 import datetime
 import logging
 import pprint
+import time
 
 import requests
 from environs import Env
@@ -41,7 +43,11 @@ def main():
             )
         except requests.exceptions.ReadTimeout:
             logger.debug("Response timeout.")
+        except requests.exceptions.ConnectionError:
+            logger.debug("Connection error.")
+            time.sleep(5)
 
 
 if __name__ == "__main__":
-    main()
+    with contextlib.suppress(KeyboardInterrupt):
+        main()
