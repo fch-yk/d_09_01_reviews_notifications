@@ -34,13 +34,9 @@ def main():
             )
             response.raise_for_status()
             response_card = response.json()
-            last_attempt_timestamp = response_card["last_attempt_timestamp"]
+            timestamp = response_card["last_attempt_timestamp"]
             pprint.pprint(response_card)
-            print("last_attempt_timestamp:", last_attempt_timestamp)
-            print(
-                "last attempt date:",
-                datetime.datetime.fromtimestamp(last_attempt_timestamp)
-            )
+            logger.debug("last_attempt_timestamp: %s", timestamp)
         except requests.exceptions.ReadTimeout:
             logger.debug("Response timeout.")
         except requests.exceptions.ConnectionError:
