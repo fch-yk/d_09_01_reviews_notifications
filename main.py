@@ -1,10 +1,16 @@
 import datetime
+import logging
+import pprint
+
 import requests
 from environs import Env
-import pprint
+
+logger = logging.getLogger(__file__)
 
 
 def main():
+    logging.basicConfig()
+    logger.setLevel(logging.DEBUG)
     env = Env()
     env.read_env()
     devman_token = env("DEVMAN_TOKEN")
@@ -13,25 +19,28 @@ def main():
     # timestamp = datetime.datetime(2023, 1, 1).timestamp()
     # timestamp = datetime.datetime.now().timestamp()
     timestamp = None
+    timeout = 15
 
     while True:
-        payload = {"timestamp": timestamp}
-        response = requests.get(
-            url,
-            headers=headers,
-            params=payload,
-            timeout=60
-        )
-        response.raise_for_status()
-        response_card = response.json()
-        last_attempt_timestamp = response_card["last_attempt_timestamp"]
-        pprint.pprint(response_card)
-        print("last_attempt_timestamp:", last_attempt_timestamp)
-        print(
-            "last attempt date:",
-            datetime.datetime.fromtimestamp(last_attempt_timestamp)
-        )
-        break
+        try:
+            payload = {"timestamp": timestamp}
+            response = requests.get(
+                url,
+                headers=headers,
+                params=payload,
+                timeout=timeout
+            )
+            response.raise_for_status()
+            response_card = response.json()
+            last_attempt_timestamp = response_card["last_attempt_timestamp"]
+            pprint.pprint(response_card)
+            print("last_attempt_timestamp:", last_attempt_timestamp)
+            print(
+                "last attempt date:",
+                datetime.datetime.fromtimestamp(last_attempt_timestamp)
+            )
+        except requests.exceptions.ReadTimeout:
+            logger.debug("Response timeout.")
 
 
 if __name__ == "__main__":
