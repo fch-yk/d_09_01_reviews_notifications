@@ -1,6 +1,5 @@
 import contextlib
 import logging
-import pprint
 import time
 
 import requests
@@ -8,6 +7,18 @@ import telegram
 from environs import Env
 
 logger = logging.getLogger(__file__)
+
+
+def send_review_message(bot, chat_id, new_attempt):
+    result = (
+        "The teacher liked everything, "
+        "you can proceed to the next lesson."
+    )
+    lesson_title = new_attempt["lesson_title"]
+    work = f"The teacher reviewed your work \"{lesson_title}\"."
+    if new_attempt["is_negative"]:
+        result = "Unfortunately, there were errors in your work."
+    bot.send_message(text=f"{work}\n{result}", chat_id=chat_id)
 
 
 def main():
@@ -35,13 +46,11 @@ def main():
             )
             response.raise_for_status()
             response_card = response.json()
-            timestamp = response_card["last_attempt_timestamp"]
-            pprint.pprint(response_card)
             if response_card["status"] == "found":
-                bot.send_message(
-                    text="The teacher reviewed your work!",
-                    chat_id=chat_id
-                )
+                for new_attempt in response_card["new_attempts"]:
+                    send_review_message(bot, chat_id, new_attempt)
+
+            timestamp = response_card["last_attempt_timestamp"]
             logger.debug("last_attempt_timestamp: %s", timestamp)
         except requests.exceptions.ReadTimeout:
             logger.debug("Response timeout.")
