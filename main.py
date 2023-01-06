@@ -30,18 +30,21 @@ def send_review_message(bot, chat_id, new_attempt):
 
 
 def main():
-    logging.basicConfig()
-    logger.setLevel(logging.DEBUG)
     env = Env()
     env.read_env()
     devman_token = env("DEVMAN_TOKEN")
     bot_token = env("REVIEW_BOT_TOKEN")
     chat_id = env("TELEGRAM_USER_ID")
+    timeout = env.int("REVIEW_REQUEST_TIMEOUT", 60)
+    debug_mode = env.bool("DEBUG_MODE", False)
+    if debug_mode:
+        logging.basicConfig()
+        logger.setLevel(logging.DEBUG)
+
     bot = telegram.Bot(token=bot_token)
     url = "https://dvmn.org/api/long_polling/"
     headers = {"Authorization": f"Token {devman_token}"}
     timestamp = None
-    timeout = 15
 
     while True:
         try:
