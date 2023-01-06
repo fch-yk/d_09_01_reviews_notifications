@@ -24,8 +24,8 @@ pip install -r requirements.txt
   - `DEVMAN_TOKEN` is your personal authorization token at [dvmn.org/api](https://dvmn.org/api/docs/);
   - `REVIEW_BOT_TOKEN` is your bot token from [@BotFather](https://t.me/BotFather);
   - `TELEGRAM_USER_ID` is your user token from [@userinfobot](https://telegram.me/userinfobot);
-  - `REVIEW_REQUEST_TIMEOUT` is the timeout of the request to [dvmn.org/api](https://dvmn.org/api/docs/), default: 60;
-  - `DEBUG_MODE` turns the debug mode on or off, default: False (off).
+  - `REVIEW_REQUEST_TIMEOUT` is the timeout of the request to [dvmn.org/api](https://dvmn.org/api/docs/), optional, default: 60;
+  - `DEBUG_MODE` turns the debug mode on or off, optional, default: False (off).
 
 To set up variables in .env file, create it in the root directory of the project and fill it up like this:
 
