@@ -10,15 +10,23 @@ logger = logging.getLogger(__file__)
 
 
 def send_review_message(bot, chat_id, new_attempt):
+    lesson_title = new_attempt["lesson_title"]
+    lesson_url = new_attempt["lesson_url"]
+    work = ("The teacher reviewed your work "
+            f"[\"{lesson_title}\"\\.]({lesson_url})"
+            )
     result = (
         "The teacher liked everything, "
-        "you can proceed to the next lesson."
+        "you can proceed to the next lesson\\!"
     )
-    lesson_title = new_attempt["lesson_title"]
-    work = f"The teacher reviewed your work \"{lesson_title}\"."
     if new_attempt["is_negative"]:
-        result = "Unfortunately, there were errors in your work."
-    bot.send_message(text=f"{work}\n{result}", chat_id=chat_id)
+        result = "Unfortunately, there were errors in your work\\."
+
+    bot.send_message(
+        text=f"{work}\n{result}",
+        chat_id=chat_id,
+        parse_mode=telegram.ParseMode.MARKDOWN_V2
+    )
 
 
 def main():
@@ -46,6 +54,7 @@ def main():
             )
             response.raise_for_status()
             response_card = response.json()
+            logger.debug("response_card: %s", response_card)
             if response_card["status"] == "found":
                 for new_attempt in response_card["new_attempts"]:
                     send_review_message(bot, chat_id, new_attempt)
