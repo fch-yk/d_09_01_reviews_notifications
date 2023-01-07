@@ -56,13 +56,13 @@ def main():
                 timeout=timeout
             )
             response.raise_for_status()
-            response_card = response.json()
-            logger.debug("response_card: %s", response_card)
-            if response_card["status"] == "found":
-                for new_attempt in response_card["new_attempts"]:
+            reviews = response.json()
+            logger.debug("response_card: %s", reviews)
+            if reviews["status"] == "found":
+                for new_attempt in reviews["new_attempts"]:
                     send_review_message(bot, chat_id, new_attempt)
 
-            timestamp = response_card["last_attempt_timestamp"]
+            timestamp = reviews["last_attempt_timestamp"]
             logger.debug("last_attempt_timestamp: %s", timestamp)
         except requests.exceptions.ReadTimeout:
             logger.debug("Response timeout.")

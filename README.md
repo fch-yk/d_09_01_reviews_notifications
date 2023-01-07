@@ -20,6 +20,8 @@ pip install -r requirements.txt
 
 - Go to [@BotFather](https://t.me/BotFather) and register your Telegram bot.
 
+- **Note**: Bots can't initiate conversations with users. You must send a message to your bot first.
+
 - Set up environmental variables in your operating system or in .env file. The variables are:
   - `DEVMAN_TOKEN` is your personal authorization token at [dvmn.org/api](https://dvmn.org/api/docs/);
   - `REVIEW_BOT_TOKEN` is your bot token from [@BotFather](https://t.me/BotFather);
