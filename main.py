@@ -35,7 +35,7 @@ def main():
     devman_token = env("DEVMAN_TOKEN")
     bot_token = env("REVIEW_BOT_TOKEN")
     chat_id = env("TELEGRAM_USER_ID")
-    timeout = env.int("REVIEW_REQUEST_TIMEOUT", 60)
+    timeout = env.int("REVIEW_REQUEST_TIMEOUT", 100)
     debug_mode = env.bool("DEBUG_MODE", False)
     if debug_mode:
         logging.basicConfig()
