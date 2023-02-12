@@ -41,6 +41,8 @@ def main():
         logging.basicConfig()
         logger.setLevel(logging.DEBUG)
 
+    logger.info('Bot started')
+
     bot = telegram.Bot(token=bot_token)
     url = "https://dvmn.org/api/long_polling/"
     headers = {"Authorization": f"Token {devman_token}"}
