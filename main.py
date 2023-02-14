@@ -1,5 +1,6 @@
 import contextlib
 import logging
+import textwrap
 import time
 
 import requests
@@ -9,7 +10,30 @@ from environs import Env
 logger = logging.getLogger(__file__)
 
 
-def send_review_message(bot, chat_id, new_attempt):
+class TelegramLogsHandler(logging.Handler):
+
+    def __init__(self, logs_bot_token, chat_id):
+        super().__init__()
+        self.chat_id = chat_id
+        self.tg_bot = telegram.Bot(token=logs_bot_token)
+        self.setFormatter(
+            logging.Formatter(
+                fmt=(
+                    '%(process)d %(levelname)s %(message)s %(asctime)s'
+                    '  %(filename)s'
+                )
+            )
+        )
+
+    def emit(self, record):
+        log_entry = self.format(record)
+        max_tg_message_size = 4096
+        msg_texts = textwrap.wrap(log_entry, max_tg_message_size)
+        for msg_text in msg_texts:
+            self.tg_bot.send_message(chat_id=self.chat_id, text=msg_text)
+
+
+def send_review_message(review_bot, chat_id, new_attempt):
     lesson_title = new_attempt["lesson_title"]
     lesson_url = new_attempt["lesson_url"]
     work = ("The teacher reviewed your work "
@@ -22,7 +46,7 @@ def send_review_message(bot, chat_id, new_attempt):
     if new_attempt["is_negative"]:
         result = "Unfortunately, there were errors in your work\\."
 
-    bot.send_message(
+    review_bot.send_message(
         text=f"{work}\n{result}",
         chat_id=chat_id,
         parse_mode=telegram.ParseMode.MARKDOWN_V2
@@ -33,23 +57,30 @@ def main():
     env = Env()
     env.read_env()
     devman_token = env("DEVMAN_TOKEN")
-    bot_token = env("REVIEW_BOT_TOKEN")
+    review_bot_token = env("REVIEW_BOT_TOKEN")
     chat_id = env("TELEGRAM_USER_ID")
     timeout = env.int("REVIEW_REQUEST_TIMEOUT", 100)
-    debug_mode = env.bool("DEBUG_MODE", False)
-    if debug_mode:
-        logging.basicConfig()
-        logger.setLevel(logging.DEBUG)
 
-    logger.info('Bot started')
+    logging.basicConfig()
+    logs_handler = TelegramLogsHandler(
+        logs_bot_token=env('REVIEW_LOGS_BOT_TOKEN'),
+        chat_id=chat_id,
+    )
 
-    bot = telegram.Bot(token=bot_token)
+    logger.addHandler(logs_handler)
+    logger.setLevel(
+        logging.DEBUG if env.bool("DEBUG_MODE", False) else logging.INFO
+    )
+
     url = "https://dvmn.org/api/long_polling/"
     headers = {"Authorization": f"Token {devman_token}"}
     timestamp = None
-
+    review_bot = None
     while True:
         try:
+            if not review_bot:
+                review_bot = telegram.Bot(token=review_bot_token)
+                logger.info('Review bot started')
             payload = {"timestamp": timestamp}
             response = requests.get(
                 url,
@@ -62,18 +93,28 @@ def main():
             logger.debug("The response: %s", reviews)
             if reviews["status"] == "found":
                 for new_attempt in reviews["new_attempts"]:
-                    send_review_message(bot, chat_id, new_attempt)
+                    send_review_message(review_bot, chat_id, new_attempt)
 
                 timestamp = reviews["last_attempt_timestamp"]
             else:
                 timestamp = reviews["timestamp_to_request"]
 
             logger.debug("timestamp for the next request: %s", timestamp)
-        except requests.exceptions.ReadTimeout:
-            logger.debug("Response timeout.")
-        except requests.exceptions.ConnectionError:
-            logger.debug("Connection error.")
-            time.sleep(5)
+        except Exception as error:
+            review_bot = None
+            if isinstance(
+                error,
+                (
+                    requests.exceptions.ConnectionError,
+                    telegram.error.NetworkError
+                )
+            ):
+                logging.error('Connection error')
+                time.sleep(10)
+                continue
+
+            logger.exception('The bot failed: %s %s', type(error), error)
+            time.sleep(10)
 
 
 if __name__ == "__main__":
