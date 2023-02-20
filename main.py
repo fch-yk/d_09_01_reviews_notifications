@@ -78,6 +78,7 @@ def main():
     review_bot = None
     review_bot = telegram.Bot(token=review_bot_token)
     logger.info('Review bot started')
+    last_error_type = None
     while True:
         try:
             payload = {"timestamp": timestamp}
@@ -99,14 +100,25 @@ def main():
                 timestamp = reviews["timestamp_to_request"]
 
             logger.debug("timestamp for the next request: %s", timestamp)
+            last_error_type = None
         except (
             requests.exceptions.ConnectionError,
             telegram.error.NetworkError
         ) as error:
-            logging.error('Connection error %s', type(error))
+            error_type = type(error)
+            if last_error_type != error_type:
+                logging.error('Connection error %s', error_type)
+            last_error_type = error_type
             time.sleep(10)
         except Exception as error:
-            logger.exception('Review bot failed: %s %s', type(error), error)
+            error_type = type(error)
+            if last_error_type != error_type:
+                logger.exception(
+                    'Review bot failed: %s %s',
+                    error_type,
+                    error
+                )
+            last_error_type = error_type
             time.sleep(10)
 
 
